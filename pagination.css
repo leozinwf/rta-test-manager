@@ -1,0 +1,32 @@
+.rta-page-size-native-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.rta-page-size-select {
+  box-sizing: border-box;
+  height: 1.875rem;
+  min-width: 7.9375rem;
+  padding: 0.25rem 1.8rem 0.25rem 0.5rem;
+  border: 1px solid #a5afa5;
+  border-radius: 0.3125rem;
+  background: #fff;
+  color: #1c1b1f;
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+  outline: none;
+}
+
+.rta-page-size-select:hover,
+.rta-page-size-select:focus {
+  border-color: #00a478;
+}
+
+.rta-page-size-select:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}

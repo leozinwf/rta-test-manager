@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "RTA Test Manager",
+  "version": "1.23.0",
+  "description": "Melhora testes, pastas, paginação e tabelas do RTA.",
+  "permissions": ["storage", "clipboardWrite"],
+  "content_scripts": [
+    {
+      "matches": ["https://*.dootax.com.br/dootax/*"],
+      "js": ["page-bridge.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": ["https://*.dootax.com.br/dootax/*"],
+      "css": ["content.css"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://*.dootax.com.br/dootax/*"],
+      "js": ["pagination-bridge.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": ["https://*.dootax.com.br/dootax/*"],
+      "css": ["pagination.css", "table-enhancer.css"],
+      "js": ["pagination.js", "table-enhancer.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
