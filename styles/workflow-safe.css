@@ -1,0 +1,207 @@
+.rta-workflow-summary {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 0 0 10px
+}
+
+.rta-workflow-summary button {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    border: 1px solid #c9d4d0;
+    background: #fff;
+    border-radius: 8px;
+    padding: 7px 10px;
+    cursor: pointer;
+    color: #35423e
+}
+
+.rta-workflow-summary button b {
+    font-size: 15px;
+    color: #00a478
+}
+
+.rta-workflow-summary button.is-active {
+    border-color: #00a478;
+    background: #f0fbf7
+}
+
+.rta-workflow-summary button span {
+    font-size: 12px
+}
+
+.rta-wf-summary-hidden {
+    display: none !important
+}
+
+.rta-wf-check {
+    width: 15px;
+    height: 15px;
+    margin: 0 8px 0 0;
+    vertical-align: middle;
+    accent-color: #00a478;
+    cursor: pointer
+}
+
+.rta-workflow-safe-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 0 0 10px;
+    padding: 9px 11px;
+    border: 1px solid #b8ccc4;
+    border-radius: 7px;
+    background: #f7fbf9;
+    font: 12px Arial, sans-serif
+}
+
+.rta-workflow-safe-bar[hidden] {
+    display: none !important
+}
+
+.rta-workflow-safe-bar>div:first-child {
+    display: flex;
+    align-items: baseline;
+    gap: 8px
+}
+
+.rta-workflow-safe-bar>div:first-child span {
+    color: #66736e
+}
+
+.rta-wf-safe-actions {
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap
+}
+
+.rta-wf-safe-actions button {
+    border: 1px solid #aab8b3;
+    background: #fff;
+    border-radius: 6px;
+    padding: 7px 9px;
+    cursor: pointer
+}
+
+.rta-wf-safe-actions button:hover {
+    border-color: #00a478
+}
+
+.rta-wf-safe-actions button:disabled {
+    opacity: .55;
+    cursor: wait
+}
+
+html.rta-status-colors-enabled table tbody tr.rta-wfs-qa-assign>td {
+    background: rgba(126, 87, 194, .11) !important
+}
+
+html.rta-status-colors-enabled table tbody tr.rta-wfs-qa-tests>td {
+    background: rgba(30, 136, 229, .13) !important
+}
+
+html.rta-status-colors-enabled table tbody tr.rta-wfs-review>td {
+    background: rgba(255, 179, 0, .15) !important
+}
+
+html.rta-status-colors-enabled table tbody tr.rta-wfs-approval>td {
+    background: rgba(0, 164, 120, .12) !important
+}
+
+html.rta-status-colors-enabled table tbody tr.rta-wfs-reproved>td {
+    background: rgba(211, 47, 47, .11) !important
+}
+
+html.rta-status-colors-enabled table tbody tr.rta-wfs-done>td {
+    background: rgba(67, 160, 71, .12) !important
+}
+
+.rta-copy-draft-id {
+    margin-left: 7px;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    border: 1px solid #b7c2be;
+    border-radius: 5px;
+    background: #fff;
+    cursor: pointer;
+    color: #52605b
+}
+
+.rta-copy-draft-id:hover,
+.rta-copy-draft-id.copied {
+    border-color: #00a478;
+    color: #00a478;
+    background: #f0fbf7
+}
+
+.rta-copy-draft-id .material-symbols-outlined {
+    font-size: 14px !important;
+    width: 14px !important;
+    height: 14px !important
+}
+
+.rta-wf-safe-actions button.primary {
+    background: #00a478 !important;
+    border-color: #00a478 !important;
+    color: #fff !important;
+    font-weight: 700
+}
+
+.rta-wf-safe-actions button.warning {
+    background: #fff8e1 !important;
+    border-color: #d49b00 !important;
+    color: #795800 !important;
+    font-weight: 700
+}
+
+html.rta-status-colors-enabled table tbody tr.rta-wfs-qa-tests {
+    background: rgba(30,136,229,.13) !important;
+}
+
+html.rta-status-colors-enabled table tbody tr.rta-wfs-qa-assign {
+    background: rgba(126,87,194,.11) !important;
+}
+
+html.rta-status-colors-enabled table tbody tr.rta-wfs-review {
+    background: rgba(255,179,0,.15) !important;
+}
+
+html.rta-status-colors-enabled table tbody tr.rta-wfs-approval {
+    background: rgba(0,164,120,.12) !important;
+}
+
+html.rta-status-colors-enabled table tbody tr.rta-wfs-reproved {
+    background: rgba(211,47,47,.11) !important;
+}
+
+html.rta-status-colors-enabled table tbody tr.rta-wfs-done {
+    background: rgba(67,160,71,.12) !important;
+}
+
+/* A última coluna do Workflow vem do RTA como td com display:flex. Em tabela isso
+   pode deixar uma faixa com o fundo branco original da linha. Restaurar table-cell
+   faz a célula ocupar toda a coluna e receber a mesma cor do status. */
+html.rta-status-colors-enabled table tbody tr[class*="rta-wfs-"] > td:last-child {
+    display: table-cell !important;
+    text-align: right !important;
+    vertical-align: middle !important;
+}
+
+.rta-wf-safe-actions button.danger {
+    background: #fff !important;
+    border-color: #c94a4a !important;
+    color: #a82d2d !important;
+    font-weight: 700
+}
+
+.rta-wf-safe-actions button.danger:hover {
+    background: #fff3f3 !important;
+    border-color: #b3261e !important
+}

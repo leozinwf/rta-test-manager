@@ -3,6 +3,7 @@
   if (window.__RTA_WORKFLOW_BATCH_1260__) return;
   window.__RTA_WORKFLOW_BATCH_1260__ = true;
 
+  const IS_STG = location.hostname === 'stg.automation.dootax.com.br';
   const API = 'https://api.stg.automation.dootax.com.br/api';
   const FEATURE_KEY = 'rtaFeaturesV1';
   let drafts = [];
@@ -85,7 +86,9 @@
 
   function ensureToolbar() {
     const table = dashboardTable();
-    if (!table || !enabled) {
+    // As ações em lote alteram o workflow. Mantemos essas ações disponíveis
+    // somente no STG para evitar chamadas acidentais a partir de AUT/PROD.
+    if (!IS_STG || !table || !enabled) {
       toolbar?.remove();
       toolbar = null;
       return null;
@@ -183,6 +186,7 @@
   }
 
   async function api(path, opt={}) {
+    if (!IS_STG) throw new Error('Ações de workflow disponíveis somente em STG.');
     const headers = {Accept:'application/json, text/plain, */*', ...(opt.headers || {})};
     const token = xsrf();
     if (token) headers['X-XSRF-TOKEN'] = token;
@@ -196,6 +200,11 @@
   }
 
   async function loadDrafts() {
+    if (!IS_STG) {
+      drafts = [];
+      schedule();
+      return;
+    }
     try {
       const response = await api('/drafts?page=0&size=100&order=asc&orderBy=name');
       const json = await response.json();

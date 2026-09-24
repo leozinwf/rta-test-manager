@@ -1,4 +1,8 @@
-# RTA Test Manager — v1.26.2
+> Versão 1.27.2: corrige a estabilidade dos botões Atribuir a mim / Desatribuir QA no Workflow.
+
+# RTA Test Manager
+
+**Versão 1.27.3** — proteção de ambiente: ações de workflow somente em STG, correção de `Failed to fetch` fora do STG e ajuste visual da última coluna do Workflow. — v1.26.2
 
 Reorganização geral da extensão.
 
@@ -38,3 +42,18 @@ As preferências continuam em `chrome.storage.local`.
 - Corrigido clique dos botões da barra de ações em lote.
 - A barra não é mais reconstruída a cada atualização automática do dashboard.
 - Botões usam `type="button"` e impedem propagação/submissão acidental.
+
+
+## v1.27.0
+- Workflow: resumo visual por status e cores (respeita o toggle de cores).
+- Workflow: seleção múltipla segura, sem aprovar/reprovar/movimentar cards.
+- Workflow: copiar nomes, IDs e dados dos itens selecionados.
+- Meus Rascunhos: botão para copiar o UUID de cada robô.
+- Nova opção "Workflow visual" nas configurações.
+- A cópia em lote de IDs usa o botão nativo do Workflow e leitura da área de transferência; por isso a extensão agora solicita `clipboardRead`.
+
+
+## v1.27.4
+- Workflow: reprovação em lote para Rascunhos, somente para itens `PENDING_QA_REVIEW`.
+- A reprovação exige justificativa e envia `targetStatus: DRAFTING`.
+- Aprovação em lote continua desabilitada até o fluxo ser capturado e validado.

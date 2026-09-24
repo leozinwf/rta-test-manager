@@ -15,6 +15,15 @@
   const text = element => element?.textContent?.replace(/\s+/g, ' ').trim() || '';
   const pageKey = () => `${location.origin}${location.pathname}`;
 
+  function logPaginationError(error) {
+    const message = String(error?.message || error || '');
+    // Ao recarregar a extensão pelo chrome://extensions, os content scripts que
+    // já estavam nas abas antigas perdem o contexto. A página precisa de F5, mas
+    // isso não representa falha real da paginação e não deve poluir a tela de erros.
+    if (/extension context invalidated/i.test(message)) return;
+    console.warn('[RTA paginação]', error);
+  }
+
   function configureBridge(action, size) {
     const token = `rta-page-size-${Date.now()}-${++bridgeSequence}`;
     return new Promise((resolve, reject) => {
@@ -164,7 +173,7 @@
       select.title = all ? `Todos os itens (${desired})` : `${desired} itens por página`;
       select.dataset.activeSize = value;
     } catch (error) {
-      console.warn('[RTA paginação]', error);
+      logPaginationError(error);
       configureBridge('clear').catch(() => {});
       select.value = select.dataset.activeSize || String(Number(text(button).match(/^\d+/)?.[0]) || 5);
       if (previousValue) await savePageSize(previousValue);
@@ -193,7 +202,7 @@
       const previousTimer = restoreTimers.get(button);
       if (previousTimer) clearTimeout(previousTimer);
       const timer = setTimeout(() => {
-        ensureSavedSize(button, select, saved).catch(error => console.warn('[RTA paginação]', error));
+        ensureSavedSize(button, select, saved).catch(error => logPaginationError(error));
       }, 700);
       restoreTimers.set(button, timer);
     }
@@ -214,7 +223,7 @@
         const previousTimer = restoreTimers.get(button);
         if (previousTimer) clearTimeout(previousTimer);
         const timer = setTimeout(() => {
-          ensureSavedSize(button, select, saved, 1).catch(error => console.warn('[RTA paginação]', error));
+          ensureSavedSize(button, select, saved, 1).catch(error => logPaginationError(error));
         }, 450);
         restoreTimers.set(button, timer);
       }
@@ -224,7 +233,7 @@
   function queueMount() {
     if (mountQueued) return;
     mountQueued = true;
-    requestAnimationFrame(() => mount().catch(error => console.warn('[RTA paginação]', error)));
+    requestAnimationFrame(() => mount().catch(error => logPaginationError(error)));
   }
 
   const observer = new MutationObserver(queueMount);

@@ -1,11 +1,12 @@
 {
   "manifest_version": 3,
   "name": "RTA Test Manager",
-  "version": "1.26.2",
-  "description": "RTA Test Manager com ações em lote estáveis e estado persistente.",
+  "version": "1.27.4",
+  "description": "RTA Test Manager com Workflow seguro, atribuição de QA e reprovação em lote.",
   "permissions": [
     "storage",
-    "clipboardWrite"
+    "clipboardWrite",
+    "clipboardRead"
   ],
   "content_scripts": [
     {
@@ -30,7 +31,8 @@
         "styles/table-enhancer.css",
         "styles/network-recorder.css",
         "styles/settings.css",
-        "styles/workflow-batch.css"
+        "styles/workflow-batch.css",
+        "styles/workflow-safe.css"
       ],
       "js": [
         "features/test-manager.js",
@@ -38,7 +40,8 @@
         "features/table-enhancer.js",
         "features/network-recorder.js",
         "features/settings.js",
-        "features/workflow-batch.js"
+        "features/workflow-batch.js",
+        "features/workflow-safe.js"
       ],
       "run_at": "document_idle"
     }
