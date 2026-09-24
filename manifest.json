@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "RTA Test Manager",
-  "version": "1.24.0",
-  "description": "Melhora testes, pastas, paginação, tabelas e adiciona um capturador de rede ao RTA.",
+  "version": "1.25.1",
+  "description": "RTA Test Manager com workflow em lote, cores por status, configurações e capturador de rede.",
   "permissions": [
     "storage",
     "clipboardWrite"
@@ -57,12 +57,16 @@
       "css": [
         "pagination.css",
         "table-enhancer.css",
-        "network-recorder.css"
+        "network-recorder.css",
+        "extension-settings.css",
+        "workflow-batch.css"
       ],
       "js": [
         "pagination.js",
         "table-enhancer.js",
-        "network-recorder.js"
+        "network-recorder.js",
+        "extension-settings.js",
+        "workflow-batch.js"
       ],
       "run_at": "document_idle"
     }

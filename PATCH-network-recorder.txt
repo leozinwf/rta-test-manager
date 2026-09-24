@@ -1,0 +1,5 @@
+Em network-recorder.js, substitua SENSITIVE_KEY por:
+const SENSITIVE_KEY = /^(authorization|proxy-authorization|cookie|set-cookie|x-api-key|api-key|apikey|password|passwd|senha|access_token|access-token|refresh_token|refresh-token|client_secret|client-secret|secret|x-xsrf-token|xsrf-token|xsrf|x-csrf-token|csrf-token|csrf)$/i;
+
+E acrescente ao grupo do SENSITIVE_INLINE:
+|x?[-_]?xsrf[-_]?token|x?[-_]?csrf[-_]?token
