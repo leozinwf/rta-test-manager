@@ -72,9 +72,12 @@
 }
 
 .rta-table-filters.is-in-toolbar {
-  position: fixed;
-  z-index: 2147483646;
+  position: relative;
+  z-index: 20;
   margin: 0;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
   pointer-events: auto !important;
 }
 

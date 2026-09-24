@@ -8,8 +8,8 @@
   let recording = false;
   let root, panel, list, detail, statusLabel, countLabel, toggleButton, nameInput, methodFilter, textFilter;
 
-  const SENSITIVE_KEY = /^(authorization|proxy-authorization|cookie|set-cookie|x-api-key|api-key|apikey|password|passwd|senha|access_token|access-token|refresh_token|refresh-token|client_secret|client-secret|secret)$/i;
-  const SENSITIVE_INLINE = /((?:password|passwd|senha|access[_-]?token|refresh[_-]?token|client[_-]?secret|authorization|api[_-]?key)\s*["']?\s*[:=]\s*["']?)([^&\s"',}\]]+)/gi;
+  const SENSITIVE_KEY = /^(authorization|proxy-authorization|cookie|set-cookie|x-api-key|api-key|apikey|password|passwd|senha|access_token|access-token|refresh_token|refresh-token|client_secret|client-secret|secret|x-xsrf-token|xsrf-token|x-csrf-token|csrf-token|csrf|xsrf)$/i;
+  const SENSITIVE_INLINE = /((?:password|passwd|senha|access[_-]?token|refresh[_-]?token|client[_-]?secret|authorization|api[_-]?key|x?[_-]?xsrf[_-]?token|x?[_-]?csrf[_-]?token)\s*["']?\s*[:=]\s*["']?)([^&\s"',}\]]+)/gi;
 
   function post(action) {
     window.postMessage({ source: SOURCE_UI, action }, '*');

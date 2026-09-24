@@ -11,6 +11,7 @@
   let mountQueued = false;
   let bridgeSequence = 0;
   const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+  const restoreTimers = new WeakMap();
   const text = element => element?.textContent?.replace(/\s+/g, ' ').trim() || '';
   const pageKey = () => `${location.origin}${location.pathname}`;
 
@@ -96,6 +97,39 @@
     return false;
   }
 
+  function visibleRowsNear(button) {
+    const table = [...document.querySelectorAll('table')].find(table => {
+      const rect = table.getBoundingClientRect();
+      const br = button.getBoundingClientRect();
+      return Math.abs(rect.bottom - br.top) < 500 || Math.abs(rect.top - br.bottom) < 1000;
+    });
+    return table ? [...table.querySelectorAll('tbody tr')].filter(row => row.offsetParent !== null).length : null;
+  }
+
+  function expectedEnoughRows(button, value) {
+    const total = totalFromPage(button);
+    const rows = visibleRowsNear(button);
+    if (!total || rows == null) return true;
+    const desired = value === 'all' ? total : Math.min(Number(value) || total, total);
+    return rows >= desired;
+  }
+
+  async function ensureSavedSize(button, select, value, attempts = 2) {
+    if (!button.isConnected || !select.isConnected) return;
+    if (select.dataset.restoring === 'true') return;
+    select.dataset.restoring = 'true';
+    try {
+      for (let attempt = 0; attempt < attempts; attempt++) {
+        await applySize(button, select, value);
+        await sleep(550);
+        if (expectedEnoughRows(button, value)) break;
+        console.warn('[RTA paginação] quantidade carregada abaixo do esperado; tentando reaplicar', value);
+      }
+    } finally {
+      delete select.dataset.restoring;
+    }
+  }
+
   async function applySize(button, select, value) {
     select.disabled = true;
     const previousValue = select.dataset.activeSize || '';
@@ -153,8 +187,15 @@
     select.addEventListener('change', () => applySize(button, select, select.value));
     button.insertAdjacentElement('afterend', select);
     const saved = savedPageSizes[pageKey()];
-    if (saved && saved !== String(current)) {
-      applySize(button, select, saved);
+    if (saved) {
+      select.value = saved;
+      select.dataset.activeSize = String(current);
+      const previousTimer = restoreTimers.get(button);
+      if (previousTimer) clearTimeout(previousTimer);
+      const timer = setTimeout(() => {
+        ensureSavedSize(button, select, saved).catch(error => console.warn('[RTA paginação]', error));
+      }, 700);
+      restoreTimers.set(button, timer);
     }
   }
 
@@ -163,7 +204,20 @@
     await loadStorage();
     findNativeButtons().forEach(enhance);
     document.querySelectorAll('.rta-page-size-select').forEach(select => {
-      if (!select.isConnected || select.previousElementSibling?.dataset.rtaPageSize !== 'native') select.remove();
+      const button = select.previousElementSibling;
+      if (!select.isConnected || button?.dataset.rtaPageSize !== 'native') {
+        select.remove();
+        return;
+      }
+      const saved = savedPageSizes[pageKey()];
+      if (saved && select.dataset.restoring !== 'true' && !expectedEnoughRows(button, saved)) {
+        const previousTimer = restoreTimers.get(button);
+        if (previousTimer) clearTimeout(previousTimer);
+        const timer = setTimeout(() => {
+          ensureSavedSize(button, select, saved, 1).catch(error => console.warn('[RTA paginação]', error));
+        }, 450);
+        restoreTimers.set(button, timer);
+      }
     });
   }
 

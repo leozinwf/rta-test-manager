@@ -5,6 +5,7 @@
 
   const STORAGE_KEY = 'rtaResizableTableWidthsV3';
   const FILTER_STORAGE_KEY = 'rtaTableFiltersV1';
+  const SORT_STORAGE_KEY = 'rtaTableSortV1';
   const EDIT_HASH_PREFIX = '#rta-edit=';
   const MIN_WIDTH = 40;
   const NATIVE_FILTER_BUTTON_CLASSES = 'text-sm ring-offset-background items-center whitespace-nowrap ring-offset-0 transition-colors focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-[#FFF] border-[#A5AFA5] hover:bg-[#FFF] hover:border-[#00A478] active:bg-[#00A4784D] active:border-[#00A4784D] text-[black] h-[2.5rem] py-[0.3125rem] px-[0.5rem] uppercase relative inline-flex justify-center align-center gap-[0.3125rem] shrink-[0] text-center !text-[1rem] font-[600] border-[1px] rounded-[0.3125rem] disabled:bg-[#E7E7E7] disabled:border-[#A5AFA5] disabled:text-[#A5AFA5]';
@@ -42,9 +43,10 @@
   ];
   const EXECUTION_HEADERS = ['robo/rascunho', 'status', 'cliente', 'ambiente', 'origem', 'data criacao'];
   const frames = new Set();
-  const workflowSortStates = new Map();
+  const persistentSortStates = new Map();
   let savedWidths = {};
   let savedFilters = {};
+  let savedSorts = {};
   let storageLoaded = false;
   let mountQueued = false;
   let editRequestRunning = false;
@@ -92,7 +94,7 @@
       ariaLabel: 'Filtros da tabela de robôs',
       fields: DASHBOARD_FILTER_FIELDS,
       columns: dashboard,
-      anchorButtons: ['exportar tudo'],
+      anchorButtons: ['exportar', 'exportar tudo'],
       addEditLinks: true
     };
     const workflow = workflowColumns(table);
@@ -449,42 +451,43 @@
     let scope = frame.parentElement;
     for (let depth = 0; scope && depth < 7; depth++, scope = scope.parentElement) {
       const anchorButton = [...scope.querySelectorAll('button')].find(button =>
-        !panel.contains(button) && profile.anchorButtons.some(label => buttonText(button) === label || buttonText(button).includes(label))
+        !panel.contains(button) && profile.anchorButtons.some(label => {
+          const text = buttonText(button);
+          return text === label || text.includes(label);
+        })
       );
       if (!anchorButton) continue;
-      let anchor = panel.__rtaFilterAnchor;
-      if (!anchor?.isConnected) {
-        anchor = document.createElement('span');
-        anchor.className = 'rta-filter-anchor';
-        anchor.setAttribute('aria-hidden', 'true');
-        panel.__rtaFilterAnchor = anchor;
-      }
-      anchorButton.insertAdjacentElement('afterend', anchor);
-      if (panel.parentElement !== document.body) document.body.append(panel);
+
+      // Keep the filter button in the real toolbar. Previous versions moved the
+      // panel to <body> and simulated its position with fixed coordinates,
+      // which drifted when the table/container scrolled horizontally.
+      panel.__rtaFilterAnchor?.remove();
+      panel.__rtaFilterAnchor = null;
+      panel.style.removeProperty('top');
+      panel.style.removeProperty('left');
+      panel.style.removeProperty('right');
+      panel.style.removeProperty('bottom');
       panel.classList.add('is-in-toolbar');
-      positionFilterButton(panel);
+
+      if (panel.parentElement !== anchorButton.parentElement || panel.previousElementSibling !== anchorButton) {
+        anchorButton.insertAdjacentElement('afterend', panel);
+      }
       return;
     }
+
     panel.__rtaFilterAnchor?.remove();
     panel.__rtaFilterAnchor = null;
     panel.style.removeProperty('top');
     panel.style.removeProperty('left');
+    panel.style.removeProperty('right');
+    panel.style.removeProperty('bottom');
     if (panel.nextElementSibling !== frame) frame.before(panel);
     panel.classList.remove('is-in-toolbar');
   }
 
   function positionFilterButton(panel) {
-    const anchor = panel.__rtaFilterAnchor;
-    const toggle = panel.querySelector('.rta-filter-toggle');
-    if (!anchor?.isConnected || !toggle) return;
-    const toggleRect = toggle.getBoundingClientRect();
-    if (toggleRect.width) {
-      anchor.style.width = `${toggleRect.width}px`;
-      anchor.style.height = `${toggleRect.height}px`;
-    }
-    const rect = anchor.getBoundingClientRect();
-    panel.style.left = `${rect.left}px`;
-    panel.style.top = `${rect.top}px`;
+    // Intentionally empty: toolbar filters now participate in normal layout.
+    // Only the opened popover uses fixed positioning.
   }
 
   function positionFilterPopover(panel) {
@@ -592,7 +595,7 @@
     updateFilterOptions(table, panel, profile);
     if (profile.addEditLinks) addEditLinks(table, profile.columns);
     applyFilters(table, panel, profile);
-    if (profile.id === 'workflow') enhanceWorkflowSorting(table, profile);
+    enhancePersistentSorting(table, profile);
   }
 
   function buttonText(button) {
@@ -601,26 +604,51 @@
     return normalizeText(clone.textContent);
   }
 
-  function workflowSortKey() {
-    return `${location.origin}${location.pathname}`;
+  function persistentSortKey(profile) {
+    return `${location.origin}${location.pathname}|${profile.id}`;
   }
 
-  function applyWorkflowSort(table, profile) {
-    const state = workflowSortStates.get(workflowSortKey());
+  function savePersistentSort(profile, state) {
+    const key = persistentSortKey(profile);
+    if (state) savedSorts[key] = state;
+    else delete savedSorts[key];
+    chrome.storage.local.set({ [SORT_STORAGE_KEY]: savedSorts });
+  }
+
+  function fieldKeyForColumn(profile, columnIndex) {
+    return profile.fields.find(field => !field.all && profile.columns[field.key] === columnIndex)?.key || null;
+  }
+
+  function columnForFieldKey(profile, fieldKey) {
+    return fieldKey ? profile.columns[fieldKey] : -1;
+  }
+
+  function applyPersistentSort(table, profile) {
+    const key = persistentSortKey(profile);
+    const state = persistentSortStates.get(key);
     const headers = tableHeaders(table);
+    const activeColumn = state ? columnForFieldKey(profile, state.fieldKey) : -1;
+
     headers.forEach((header, index) => {
-      const active = state?.columnIndex === index;
+      const active = activeColumn === index;
       header.setAttribute('aria-sort', active ? (state.direction === 'asc' ? 'ascending' : 'descending') : 'none');
       const indicator = header.querySelector(':scope > .rta-sort-indicator');
-      const icon = active ? (state.direction === 'asc' ? 'arrow_upward' : 'arrow_downward') : 'unfold_more';
-      if (indicator && indicator.textContent !== icon) indicator.textContent = icon;
+      if (indicator) indicator.textContent = active ? (state.direction === 'asc' ? 'arrow_upward' : 'arrow_downward') : 'unfold_more';
     });
-    if (!state || !headers[state.columnIndex]) return;
+
+    if (!state || activeColumn == null || activeColumn < 0 || !headers[activeColumn]) return;
+
     const direction = state.direction === 'desc' ? -1 : 1;
     const collator = new Intl.Collator('pt-BR', { numeric: true, sensitivity: 'base' });
+
     [...table.tBodies].forEach(body => {
-      const rows = [...body.rows];
-      const sorted = rows.map((row, position) => ({ row, position, value: cleanText(row.cells[state.columnIndex]?.textContent) }))
+      const currentRows = [...body.rows];
+      const sortedRows = currentRows
+        .map((row, position) => ({
+          row,
+          position,
+          value: cleanText(row.cells[activeColumn]?.textContent)
+        }))
         .sort((left, right) => {
           if (!left.value && !right.value) return left.position - right.position;
           if (!left.value) return 1;
@@ -628,16 +656,26 @@
           return collator.compare(left.value, right.value) * direction || left.position - right.position;
         })
         .map(item => item.row);
-      if (sorted.some((row, index) => row !== rows[index])) body.append(...sorted);
+
+      if (sortedRows.some((row, index) => row !== currentRows[index])) body.append(...sortedRows);
     });
   }
 
-  function enhanceWorkflowSorting(table, profile) {
+  function enhancePersistentSorting(table, profile) {
+    if (!['robots', 'workflow'].includes(profile.id)) return;
+
+    const key = persistentSortKey(profile);
+    const stored = savedSorts[key];
+    if (stored && !persistentSortStates.has(key)) persistentSortStates.set(key, stored);
+
     const sortableColumns = [...new Set(profile.fields.filter(field => !field.all)
       .map(field => profile.columns[field.key]).filter(index => index >= 0))];
+
     sortableColumns.forEach(index => {
       const header = tableHeaders(table)[index];
-      if (!header) return;
+      const fieldKey = fieldKeyForColumn(profile, index);
+      if (!header || !fieldKey) return;
+
       header.classList.add('rta-workflow-sortable');
       if (!header.querySelector(':scope > .rta-sort-indicator')) {
         const indicator = document.createElement('span');
@@ -645,22 +683,29 @@
         indicator.setAttribute('aria-hidden', 'true');
         header.insertBefore(indicator, header.querySelector(':scope > .rta-column-resizer'));
       }
-      if (header.dataset.rtaWorkflowSort === 'true') return;
-      header.dataset.rtaWorkflowSort = 'true';
-      header.title = `${header.title ? `${header.title} — ` : ''}Clique para ordenar`;
+
+      if (header.dataset.rtaPersistentSort === 'true') return;
+      header.dataset.rtaPersistentSort = 'true';
+      header.title = `${header.title ? `${header.title} — ` : ''}Clique para ordenar; a ordenação será mantida após atualizar`;
+
       header.addEventListener('click', event => {
         if (event.button !== 0 || event.target.closest?.('.rta-column-resizer, button, input, a, [role="checkbox"]')) return;
         event.preventDefault();
         event.stopImmediatePropagation();
-        const current = workflowSortStates.get(workflowSortKey());
-        workflowSortStates.set(workflowSortKey(), {
-          columnIndex: index,
-          direction: current?.columnIndex === index && current.direction === 'asc' ? 'desc' : 'asc'
-        });
-        applyWorkflowSort(table, profile);
-      });
+
+        const current = persistentSortStates.get(key);
+        const state = {
+          fieldKey,
+          direction: current?.fieldKey === fieldKey && current.direction === 'asc' ? 'desc' : 'asc'
+        };
+
+        persistentSortStates.set(key, state);
+        savePersistentSort(profile, state);
+        applyPersistentSort(table, profile);
+      }, true);
     });
-    applyWorkflowSort(table, profile);
+
+    applyPersistentSort(table, profile);
   }
 
   function executionColumns(table) {
@@ -954,9 +999,11 @@
 
   async function loadStorage() {
     if (storageLoaded) return;
-    const value = await chrome.storage.local.get([STORAGE_KEY, FILTER_STORAGE_KEY]);
+    const value = await chrome.storage.local.get([STORAGE_KEY, FILTER_STORAGE_KEY, SORT_STORAGE_KEY]);
     savedWidths = value[STORAGE_KEY] && typeof value[STORAGE_KEY] === 'object' ? value[STORAGE_KEY] : {};
     savedFilters = value[FILTER_STORAGE_KEY] && typeof value[FILTER_STORAGE_KEY] === 'object' ? value[FILTER_STORAGE_KEY] : {};
+    savedSorts = value[SORT_STORAGE_KEY] && typeof value[SORT_STORAGE_KEY] === 'object' ? value[SORT_STORAGE_KEY] : {};
+    Object.entries(savedSorts).forEach(([key, state]) => persistentSortStates.set(key, state));
     storageLoaded = true;
   }
 

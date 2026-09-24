@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "RTA Test Manager",
-  "version": "1.25.1",
-  "description": "RTA Test Manager com workflow em lote, cores por status, configurações e capturador de rede.",
+  "version": "1.26.2",
+  "description": "RTA Test Manager com ações em lote estáveis e estado persistente.",
   "permissions": [
     "storage",
     "clipboardWrite"
@@ -13,39 +13,9 @@
         "https://*.dootax.com.br/dootax/*"
       ],
       "js": [
-        "page-bridge.js"
-      ],
-      "run_at": "document_start",
-      "world": "MAIN"
-    },
-    {
-      "matches": [
-        "https://*.dootax.com.br/dootax/*"
-      ],
-      "js": [
-        "network-recorder-bridge.js"
-      ],
-      "run_at": "document_start",
-      "world": "MAIN"
-    },
-    {
-      "matches": [
-        "https://*.dootax.com.br/dootax/*"
-      ],
-      "css": [
-        "content.css"
-      ],
-      "js": [
-        "content.js"
-      ],
-      "run_at": "document_idle"
-    },
-    {
-      "matches": [
-        "https://*.dootax.com.br/dootax/*"
-      ],
-      "js": [
-        "pagination-bridge.js"
+        "core/page-bridge.js",
+        "core/network-recorder-bridge.js",
+        "core/pagination-bridge.js"
       ],
       "run_at": "document_start",
       "world": "MAIN"
@@ -55,18 +25,20 @@
         "https://*.dootax.com.br/dootax/*"
       ],
       "css": [
-        "pagination.css",
-        "table-enhancer.css",
-        "network-recorder.css",
-        "extension-settings.css",
-        "workflow-batch.css"
+        "styles/test-manager.css",
+        "styles/pagination.css",
+        "styles/table-enhancer.css",
+        "styles/network-recorder.css",
+        "styles/settings.css",
+        "styles/workflow-batch.css"
       ],
       "js": [
-        "pagination.js",
-        "table-enhancer.js",
-        "network-recorder.js",
-        "extension-settings.js",
-        "workflow-batch.js"
+        "features/test-manager.js",
+        "features/pagination.js",
+        "features/table-enhancer.js",
+        "features/network-recorder.js",
+        "features/settings.js",
+        "features/workflow-batch.js"
       ],
       "run_at": "document_idle"
     }
